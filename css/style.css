@@ -1,0 +1,13 @@
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background: black;
+}
+
+/* Canvas do jogo */
+#gameCanvas {
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
+}
