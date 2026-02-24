@@ -1,4 +1,4 @@
-const fire = document.getElementById("fire");
+﻿const fire = document.getElementById("fire");
 
 const isSmallScreen = window.matchMedia("(max-width: 768px)").matches;
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -12,6 +12,9 @@ for (let i = 0; i < particleCount; i++) {
     const spark = document.createElement("div");
     spark.className = "spark";
     spark.style.left = Math.random() * 100 + "vw";
+    const driftDirection = Math.random() > 0.5 ? 1 : -1;
+    const driftAmount = 8 + Math.random() * 26;
+    spark.style.setProperty("--drift-x", (driftDirection * driftAmount) + "vw");
     spark.style.animationDuration = (2 + Math.random() * 4) + "s";
     spark.style.animationDelay = Math.random() * 5 + "s";
     fire.appendChild(spark);
