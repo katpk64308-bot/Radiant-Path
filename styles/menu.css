@@ -1,4 +1,5 @@
-﻿html,
+/* Reset básico */
+html,
 body {
     margin: 0;
     width: 100%;
@@ -16,6 +17,7 @@ body {
     overflow: hidden;
 }
 
+/* Logo decorativa */
 #ui-container::after {
     content: "";
     position: absolute;
@@ -24,7 +26,7 @@ body {
     transform: translateY(-50%);
     width: min(11vw, 170px);
     aspect-ratio: 1 / 1;
-    background: url("../img/logo.png") center/cover no-repeat;
+    background: url("../assets/img/logo.png") center/cover no-repeat;
     border-radius: 50%;
     pointer-events: none;
     filter: saturate(0.9) contrast(1.05);

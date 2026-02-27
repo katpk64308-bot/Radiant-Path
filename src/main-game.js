@@ -1,16 +1,20 @@
-﻿const canvas = document.getElementById("gameCanvas");
+// Canvas base do jogo
+const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+// Estado principal do jogo
 let player;
 let floor;
 let gameRunning = false;
 
+// Mapa simples de controles
 const controls = {
     left: false,
     right: false,
     down: false,
 };
 
+// Inicializa o jogo e começa o loop
 function startGame() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -22,6 +26,7 @@ function startGame() {
     gameLoop();
 }
 
+// Tecla pressionada
 function handleKeyDown(e) {
     switch (e.code) {
         case "ArrowLeft":
@@ -47,6 +52,7 @@ function handleKeyDown(e) {
     e.preventDefault();
 }
 
+// Tecla solta
 function handleKeyUp(e) {
     switch (e.code) {
         case "ArrowLeft":
@@ -68,6 +74,7 @@ function handleKeyUp(e) {
     e.preventDefault();
 }
 
+// Eventos de entrada e de janela
 window.addEventListener("keydown", handleKeyDown);
 window.addEventListener("keyup", handleKeyUp);
 window.addEventListener("mousedown", () => {
@@ -83,6 +90,7 @@ window.addEventListener("resize", () => {
 
 window.addEventListener("DOMContentLoaded", startGame);
 
+// Loop principal
 function gameLoop() {
     if (!gameRunning) return;
 
@@ -95,6 +103,7 @@ function gameLoop() {
         player.vy += 0.35;
     }
 
+    // Atualiza e desenha
     player.update(floor.y, canvas.width);
     floor.draw(ctx);
     player.draw(ctx);

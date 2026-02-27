@@ -1,11 +1,15 @@
+// Efeito de partículas no canvas (fogo simples)
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
+// Ajusta o canvas ao tamanho da tela
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+// Lista de partículas
 let sparks = [];
 
+// Cria uma partícula aleatória
 function createSpark() {
     sparks.push({
         x: Math.random() * canvas.width,
@@ -16,6 +20,7 @@ function createSpark() {
     });
 }
 
+// Atualiza e desenha todas as partículas
 function update() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 

@@ -1,5 +1,7 @@
-﻿const fire = document.getElementById("fire");
+// Partículas do menu (efeito de fogo)
+const fire = document.getElementById("fire");
 
+// Ajustes simples para telas menores e dispositivos fracos
 const isSmallScreen = window.matchMedia("(max-width: 768px)").matches;
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const lowCpu = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4;
@@ -8,6 +10,7 @@ let particleCount = 90;
 if (isSmallScreen) particleCount = 60;
 if (lowCpu || prefersReducedMotion) particleCount = 35;
 
+// Cria as partículas com animação e variação aleatória
 for (let i = 0; i < particleCount; i++) {
     const spark = document.createElement("div");
     spark.className = "spark";
