@@ -4,7 +4,7 @@ const ctx = canvas.getContext("2d");
 
 // Estado principal do jogo
 let player;
-let floor;
+let platforms = [];
 let gameRunning = false;
 
 // Mapa simples de controles
@@ -14,15 +14,24 @@ const controls = {
     down: false,
 };
 
-// Inicializa o jogo e começa o loop
+// Cria o layout das plataformas
+function buildPlatforms() {
+    platforms = [
+        new Floor(canvas.width, canvas.height), // chao
+        new Platform(300, canvas.height - 180, 220, 20),
+        new Platform(620, canvas.height - 280, 180, 20),
+    ];
+}
+
+// Inicializa o jogo e comeca o loop
 function startGame() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
     player = new Player();
-    floor = new Floor(canvas.width, canvas.height);
-    gameRunning = true;
+    buildPlatforms();
 
+    gameRunning = true;
     gameLoop();
 }
 
@@ -85,7 +94,7 @@ window.addEventListener("resize", () => {
     if (!gameRunning) return;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    floor = new Floor(canvas.width, canvas.height);
+    buildPlatforms();
 });
 
 window.addEventListener("DOMContentLoaded", startGame);
@@ -104,8 +113,8 @@ function gameLoop() {
     }
 
     // Atualiza e desenha
-    player.update(floor.y, canvas.width);
-    floor.draw(ctx);
+    player.update(platforms, canvas.width);
+    platforms.forEach((p) => p.draw(ctx));
     player.draw(ctx);
 
     requestAnimationFrame(gameLoop);

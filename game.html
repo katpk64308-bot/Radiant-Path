@@ -11,10 +11,23 @@
 
 <body>
 
+    <!-- Mini mapa (6x15) -->
+    <pre id="miniMap"
+        style="position: fixed; top: 10px; left: 10px; margin: 0; padding: 10px; background: rgba(0,0,0,0.6); color: #fff; font-family: monospace; z-index: 10;">
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    </pre>
+
     <!-- Canvas principal -->
     <canvas id="gameCanvas"></canvas>
 
-    <!-- Entidades e lógica do jogo -->
+    <!-- Entidades e l�gica do jogo -->
     <script src="src/game/entities/floor.js"></script>
     <script src="src/game/entities/player.js"></script>
     <script src="src/main-game.js"></script>

@@ -1,24 +1,29 @@
-// Partículas do menu (efeito de fogo)
-const fire = document.getElementById("fire");
+// Neblina do menu (camadas suaves)
+const fogLayer = document.getElementById("fire");
 
-// Ajustes simples para telas menores e dispositivos fracos
 const isSmallScreen = window.matchMedia("(max-width: 768px)").matches;
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const lowCpu = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4;
 
-let particleCount = 90;
-if (isSmallScreen) particleCount = 60;
-if (lowCpu || prefersReducedMotion) particleCount = 35;
+let cloudCount = 30;
+if (isSmallScreen) cloudCount = 18;
+if (lowCpu || prefersReducedMotion) cloudCount = 10;
 
-// Cria as partículas com animação e variação aleatória
-for (let i = 0; i < particleCount; i++) {
-    const spark = document.createElement("div");
-    spark.className = "spark";
-    spark.style.left = Math.random() * 100 + "vw";
-    const driftDirection = Math.random() > 0.5 ? 1 : -1;
-    const driftAmount = 8 + Math.random() * 26;
-    spark.style.setProperty("--drift-x", (driftDirection * driftAmount) + "vw");
-    spark.style.animationDuration = (2 + Math.random() * 4) + "s";
-    spark.style.animationDelay = Math.random() * 5 + "s";
-    fire.appendChild(spark);
+for (let i = 0; i < cloudCount; i++) {
+    const cloud = document.createElement("div");
+    cloud.className = "fog-cloud";
+
+    cloud.style.left = Math.random() * 100 + "vw";
+    cloud.style.top = 10 + Math.random() * 80 + "%";
+
+    const size = 220 + Math.random() * 340;
+    cloud.style.width = size + "px";
+    cloud.style.height = size * (0.42 + Math.random() * 0.2) + "px";
+
+    cloud.style.setProperty("--drift-x", (28 + Math.random() * 60) + "vw");
+    cloud.style.animationDuration = (12 + Math.random() * 14) + "s";
+    cloud.style.animationDelay = (-1 * Math.random() * 20) + "s";
+    cloud.style.opacity = (0.28 + Math.random() * 0.27).toFixed(2);
+
+    fogLayer.appendChild(cloud);
 }
