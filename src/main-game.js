@@ -4,13 +4,12 @@ const ctx = canvas.getContext("2d");
 const orientationOverlay = document.getElementById("orientation-lock");
 const miniMap = document.getElementById("miniMap");
 const isMobileDevice = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
-let fullscreenRequested = false;
 
 // Estado principal do jogo
 let player;
 let platforms = [];
 let gameRunning = false;
-let orientationBlocked = false;
+let forceLandscapeView = false;
 
 // Mapa simples de controles
 const controls = {
@@ -33,14 +32,15 @@ function isPortraitMode() {
 }
 
 function updateOrientationGate() {
-    orientationBlocked = isMobileDevice && isPortraitMode();
+    forceLandscapeView = isMobileDevice && isPortraitMode();
+    document.body.classList.toggle("force-landscape", forceLandscapeView);
 
     if (orientationOverlay) {
-        orientationOverlay.classList.toggle("is-visible", orientationBlocked);
+        orientationOverlay.classList.remove("is-visible");
     }
 
     if (miniMap) {
-        miniMap.style.display = orientationBlocked ? "none" : "block";
+        miniMap.style.display = forceLandscapeView ? "none" : "block";
     }
 }
 
@@ -60,41 +60,18 @@ function getViewportSize() {
 
 function resizeGameViewport() {
     const viewport = getViewportSize();
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    canvas.style.width = viewport.width + "px";
-    canvas.style.height = viewport.height + "px";
-}
+    const targetWidth = forceLandscapeView ? viewport.height : viewport.width;
+    const targetHeight = forceLandscapeView ? viewport.width : viewport.height;
 
-async function tryLockLandscape() {
-    if (!isMobileDevice) return;
-    if (!window.screen || !screen.orientation || !screen.orientation.lock) return;
-
-    try {
-        await screen.orientation.lock("landscape");
-    } catch (_) {
-        // Alguns navegadores exigem fullscreen/gesto do usuario.
-    }
-}
-
-async function tryEnterFullscreen() {
-    if (!isMobileDevice || fullscreenRequested) return;
-    if (document.fullscreenElement) return;
-    if (!document.documentElement.requestFullscreen) return;
-
-    try {
-        await document.documentElement.requestFullscreen();
-        fullscreenRequested = true;
-        await tryLockLandscape();
-    } catch (_) {
-        // Nem todo navegador mobile permite fullscreen via script.
-    }
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    canvas.style.width = targetWidth + "px";
+    canvas.style.height = targetHeight + "px";
 }
 
 // Inicializa o jogo e comeca o loop
 function startGame() {
     updateOrientationGate();
-    tryLockLandscape();
     resizeGameViewport();
 
     if (isMobileDevice) {
@@ -161,14 +138,12 @@ function handleKeyUp(e) {
 window.addEventListener("keydown", handleKeyDown);
 window.addEventListener("keyup", handleKeyUp);
 window.addEventListener("mousedown", () => {
-    tryEnterFullscreen();
     if (player) player.jump();
 });
 window.addEventListener(
     "touchstart",
     () => {
-        tryEnterFullscreen();
-        tryLockLandscape();
+        if (player) player.jump();
     },
     { passive: true }
 );
@@ -196,12 +171,6 @@ window.addEventListener("DOMContentLoaded", startGame);
 function gameLoop() {
     if (!gameRunning) return;
     updateOrientationGate();
-
-    if (orientationBlocked) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        requestAnimationFrame(gameLoop);
-        return;
-    }
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 

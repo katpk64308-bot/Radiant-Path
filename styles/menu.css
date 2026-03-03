@@ -135,7 +135,7 @@ button:hover,
     #menu {
         left: 6vw;
         width: min(76vw, 420px);
-        top: 47%;
+        top: 52%;
     }
 
     #menu h1 {
@@ -146,14 +146,14 @@ button:hover,
     button,
     .start-link {
         font-size: clamp(0.85rem, 3.8vw, 1rem);
-        padding: 7px 10px;
-        margin-top: 1px;
+        padding: 6px 10px;
+        margin-top: -1px;
         line-height: 1.05;
     }
 
     #menu::after {
-        width: min(30vw, 96px);
-        margin-top: 4px;
+        width: min(24vw, 72px);
+        margin-top: -2px;
     }
 }
 
