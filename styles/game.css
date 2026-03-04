@@ -17,11 +17,13 @@ body {
 #gameCanvas {
     display: block;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100dvh;
-    max-height: 100dvh;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: auto;
+    height: auto;
+    max-width: none;
+    max-height: none;
     background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
 }
 
@@ -100,9 +102,6 @@ body {
 body.force-landscape #gameCanvas {
     top: 50%;
     left: 50%;
-    width: 100dvh;
-    height: 100vw;
-    max-height: none;
     transform: translate(-50%, -50%) rotate(90deg);
     transform-origin: center center;
 }

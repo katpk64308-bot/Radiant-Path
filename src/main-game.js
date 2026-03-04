@@ -9,6 +9,9 @@ const analogBase = document.getElementById("analog-base");
 const analogKnob = document.getElementById("analog-knob");
 const touchJump = document.getElementById("touch-jump");
 const confirmMenuYes = document.getElementById("confirm-menu-yes");
+const confirmMenuNo = document.getElementById("confirm-menu-no");
+const BASE_GAME_WIDTH = 1366;
+const BASE_GAME_HEIGHT = 768;
 
 // Estado principal do jogo
 let player;
@@ -34,22 +37,32 @@ function isMenuConfirmOpen() {
     return window.location.hash === menuConfirmHash;
 }
 
+function clearControls() {
+    controls.left = false;
+    controls.right = false;
+    controls.down = false;
+}
+
+function blockPlayerInputs() {
+    resetAnalogStick();
+    clearControls();
+    if (player) {
+        player.setHorizontalInput(0);
+    }
+}
+
 function closeMenuConfirm() {
     if (window.location.hash === menuConfirmHash) {
         history.replaceState(history.state, "", window.location.pathname + window.location.search);
     }
+    blockPlayerInputs();
 }
 
 function openMenuConfirm() {
     if (window.location.hash !== menuConfirmHash) {
         window.location.hash = menuConfirmHash;
     }
-}
-
-function clearControls() {
-    controls.left = false;
-    controls.right = false;
-    controls.down = false;
+    blockPlayerInputs();
 }
 
 function isEventInsideTouchControls(event) {
@@ -203,8 +216,10 @@ function getViewportSize() {
 
 function resizeGameViewport() {
     const viewport = getViewportSize();
-    const targetWidth = forceLandscapeView ? viewport.height : viewport.width;
-    const targetHeight = forceLandscapeView ? viewport.width : viewport.height;
+    const rawWidth = forceLandscapeView ? viewport.height : viewport.width;
+    const rawHeight = forceLandscapeView ? viewport.width : viewport.height;
+    const targetWidth = Math.max(BASE_GAME_WIDTH, rawWidth);
+    const targetHeight = Math.max(BASE_GAME_HEIGHT, rawHeight);
 
     canvas.width = targetWidth;
     canvas.height = targetHeight;
@@ -310,7 +325,7 @@ function startGame() {
 // Tecla pressionada
 function handleKeyDown(e) {
     if (isMenuConfirmOpen()) {
-        clearControls();
+        blockPlayerInputs();
         e.preventDefault();
         return;
     }
@@ -342,7 +357,7 @@ function handleKeyDown(e) {
 // Tecla solta
 function handleKeyUp(e) {
     if (isMenuConfirmOpen()) {
-        clearControls();
+        blockPlayerInputs();
         e.preventDefault();
         return;
     }
@@ -418,13 +433,20 @@ if (confirmMenuYes) {
     });
 }
 
-document.querySelectorAll("#confirm-menu .confirm-no").forEach((button) => {
-    button.addEventListener("click", (event) => {
-        if (!button.getAttribute("href") || button.getAttribute("href") !== "#") return;
+if (confirmMenuNo) {
+    confirmMenuNo.addEventListener("click", (event) => {
         event.preventDefault();
         closeMenuConfirm();
         tryEnterFullscreen();
     });
+}
+
+window.addEventListener("hashchange", () => {
+    if (isMenuConfirmOpen()) {
+        blockPlayerInputs();
+    } else {
+        clearControls();
+    }
 });
 
 window.addEventListener("DOMContentLoaded", startGame);
@@ -435,8 +457,7 @@ function gameLoop() {
     updateOrientationGate();
 
     if (isMenuConfirmOpen()) {
-        resetAnalogStick();
-        clearControls();
+        blockPlayerInputs();
         requestAnimationFrame(gameLoop);
         return;
     }
