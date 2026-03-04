@@ -3,11 +3,12 @@ const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 const orientationOverlay = document.getElementById("orientation-lock");
 const miniMap = document.getElementById("miniMap");
-const isMobileDevice = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
+const isMobileDevice = window.matchMedia("(pointer: coarse)").matches;
 const touchControls = document.getElementById("touch-controls");
 const analogBase = document.getElementById("analog-base");
 const analogKnob = document.getElementById("analog-knob");
 const touchJump = document.getElementById("touch-jump");
+const confirmMenuYes = document.getElementById("confirm-menu-yes");
 
 // Estado principal do jogo
 let player;
@@ -25,9 +26,24 @@ const controls = {
 let touchControlsReady = false;
 let analogActive = false;
 let analogPointerId = null;
+let fullscreenRequested = false;
+let allowBackNavigation = false;
+const menuConfirmHash = "#confirm-menu";
 
 function isMenuConfirmOpen() {
-    return window.location.hash === "#confirm-menu";
+    return window.location.hash === menuConfirmHash;
+}
+
+function closeMenuConfirm() {
+    if (window.location.hash === menuConfirmHash) {
+        history.replaceState(history.state, "", window.location.pathname + window.location.search);
+    }
+}
+
+function openMenuConfirm() {
+    if (window.location.hash !== menuConfirmHash) {
+        window.location.hash = menuConfirmHash;
+    }
 }
 
 function clearControls() {
@@ -117,6 +133,34 @@ function setupTouchControls() {
     });
 }
 
+async function tryEnterFullscreen() {
+    if (!isMobileDevice) return;
+    if (fullscreenRequested && document.fullscreenElement) return;
+    if (document.fullscreenElement) return;
+    if (!document.documentElement.requestFullscreen) return;
+
+    try {
+        await document.documentElement.requestFullscreen();
+        fullscreenRequested = true;
+    } catch (_) {
+        // Nem todo navegador mobile permite fullscreen por script.
+    }
+}
+
+function installMobileBackGuard() {
+    if (!isMobileDevice || !window.history || !window.history.pushState) return;
+
+    history.pushState({ mobileBackGuard: true }, "", window.location.href);
+
+    window.addEventListener("popstate", () => {
+        if (allowBackNavigation) return;
+
+        openMenuConfirm();
+        history.pushState({ mobileBackGuard: true }, "", window.location.href);
+        tryEnterFullscreen();
+    });
+}
+
 // Cria o layout das plataformas
 function buildPlatforms() {
     platforms = [
@@ -168,10 +212,85 @@ function resizeGameViewport() {
     canvas.style.height = targetHeight + "px";
 }
 
+function syncPlayerToResizedViewport(prevWidth, prevHeight, nextWidth, nextHeight) {
+    if (!player) return;
+    if (!prevWidth || !prevHeight || !nextWidth || !nextHeight) return;
+
+    const scaleX = nextWidth / prevWidth;
+    const scaleY = nextHeight / prevHeight;
+
+    player.x *= scaleX;
+    player.y *= scaleY;
+
+    // Mantem o jogador dentro da tela apos resize agressivo.
+    const maxX = Math.max(0, nextWidth - player.width);
+    const maxY = Math.max(0, nextHeight - player.height);
+    if (player.x < 0) player.x = 0;
+    if (player.y < 0) player.y = 0;
+    if (player.x > maxX) player.x = maxX;
+    if (player.y > maxY) player.y = maxY;
+}
+
+function findNearestSupportTopForPlayer() {
+    if (!player || !platforms || platforms.length === 0) return null;
+
+    const playerBottom = player.y + player.height;
+    let bestTop = null;
+    let bestDistance = Infinity;
+
+    for (const p of platforms) {
+        const horizontalOverlap =
+            player.x < p.x + p.width &&
+            player.x + player.width > p.x;
+
+        if (!horizontalOverlap) continue;
+
+        const distance = Math.abs(playerBottom - p.y);
+        if (distance < bestDistance) {
+            bestDistance = distance;
+            bestTop = p.y;
+        }
+    }
+
+    return bestTop;
+}
+
+function handleGameResize() {
+    if (!gameRunning) return;
+
+    const prevWidth = canvas.width;
+    const prevHeight = canvas.height;
+    const wasGrounded = !!(player && player.isGrounded);
+
+    updateOrientationGate();
+    resizeGameViewport();
+    buildPlatforms();
+    syncPlayerToResizedViewport(prevWidth, prevHeight, canvas.width, canvas.height);
+
+    if (player) {
+        const supportTop = findNearestSupportTopForPlayer();
+
+        if (wasGrounded && supportTop !== null) {
+            player.y = supportTop - player.height;
+            player.vy = 0;
+            player.isGrounded = true;
+        } else if (supportTop !== null && player.y + player.height > supportTop) {
+            player.y = supportTop - player.height;
+            player.vy = 0;
+            player.isGrounded = true;
+        }
+    }
+}
+
 // Inicializa o jogo e comeca o loop
 function startGame() {
-    if (gameRunning) return;
+    if (gameRunning) {
+        handleGameResize();
+        return;
+    }
 
+    tryEnterFullscreen();
+    installMobileBackGuard();
     updateOrientationGate();
     resizeGameViewport();
 
@@ -258,29 +377,55 @@ window.addEventListener("mousedown", () => {
 window.addEventListener(
     "touchstart",
     (event) => {
+        tryEnterFullscreen();
         if (isMenuConfirmOpen()) return;
         if (isEventInsideTouchControls(event)) return;
         if (player) player.jump();
     },
     { passive: true }
 );
-
-window.addEventListener("resize", () => {
-    if (!gameRunning) return;
-    updateOrientationGate();
-    resizeGameViewport();
-    buildPlatforms();
+window.addEventListener(
+    "pointerdown",
+    () => {
+        tryEnterFullscreen();
+    },
+    { passive: true }
+);
+document.addEventListener("fullscreenchange", () => {
+    if (!document.fullscreenElement) {
+        fullscreenRequested = false;
+        if (!isMenuConfirmOpen()) {
+            tryEnterFullscreen();
+        }
+    }
 });
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && !isMenuConfirmOpen()) {
+        tryEnterFullscreen();
+    }
+});
+
+window.addEventListener("resize", handleGameResize);
 
 window.addEventListener("orientationchange", updateOrientationGate);
 if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", () => {
-        if (!gameRunning) return;
-        updateOrientationGate();
-        resizeGameViewport();
-        buildPlatforms();
+    window.visualViewport.addEventListener("resize", handleGameResize);
+}
+
+if (confirmMenuYes) {
+    confirmMenuYes.addEventListener("click", () => {
+        allowBackNavigation = true;
     });
 }
+
+document.querySelectorAll("#confirm-menu .confirm-no").forEach((button) => {
+    button.addEventListener("click", (event) => {
+        if (!button.getAttribute("href") || button.getAttribute("href") !== "#") return;
+        event.preventDefault();
+        closeMenuConfirm();
+        tryEnterFullscreen();
+    });
+});
 
 window.addEventListener("DOMContentLoaded", startGame);
 

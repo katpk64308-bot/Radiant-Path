@@ -166,9 +166,22 @@ class Player {
             }
         }
 
-        // Fallback de seguranca caso nao exista plataforma de chao
+        // Fallback de seguranca: ancora no topo do suporte mais baixo disponivel.
         if (typeof canvasHeight === "number" && this.y + this.height > canvasHeight) {
-            this.y = canvasHeight - this.height;
+            let supportTop = canvasHeight;
+
+            if (Array.isArray(platforms)) {
+                for (const p of platforms) {
+                    const horizontalOverlap =
+                        this.x < p.x + p.width &&
+                        this.x + this.width > p.x;
+
+                    if (!horizontalOverlap) continue;
+                    if (p.y < supportTop) supportTop = p.y;
+                }
+            }
+
+            this.y = supportTop - this.height;
             this.vy = 0;
             this.isGrounded = true;
         }

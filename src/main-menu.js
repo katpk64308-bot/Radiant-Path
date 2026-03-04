@@ -4,12 +4,14 @@ const orientationOverlay = document.getElementById("orientation-lock-menu");
 const uiContainer = document.getElementById("ui-container");
 const confirmExitYes = document.getElementById("confirm-exit-yes");
 
-const isMobileViewport = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
+const isMobileViewport = window.matchMedia("(pointer: coarse)").matches;
 const isSmallScreen = window.matchMedia("(max-width: 768px)").matches;
 const isVeryTallPhone = window.innerWidth <= 900 && window.innerHeight >= 1700;
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const lowCpu = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4;
 let fullscreenRequested = false;
+let allowBackNavigation = false;
+const exitConfirmHash = "#confirm-exit";
 
 function isPortraitMode() {
     return window.innerHeight > window.innerWidth;
@@ -39,7 +41,8 @@ async function tryLockLandscape() {
 }
 
 async function tryEnterFullscreen() {
-    if (!isMobileViewport || fullscreenRequested) return;
+    if (!isMobileViewport) return;
+    if (fullscreenRequested && document.fullscreenElement) return;
     if (document.fullscreenElement) return;
     if (!document.documentElement.requestFullscreen) return;
 
@@ -52,11 +55,49 @@ async function tryEnterFullscreen() {
     }
 }
 
+function closeExitConfirm() {
+    if (window.location.hash === exitConfirmHash) {
+        history.replaceState(history.state, "", window.location.pathname + window.location.search);
+    }
+}
+
+function openExitConfirm() {
+    if (window.location.hash !== exitConfirmHash) {
+        window.location.hash = exitConfirmHash;
+    }
+}
+
+function installMobileBackGuard() {
+    if (!isMobileViewport || !window.history || !window.history.pushState) return;
+
+    history.pushState({ mobileBackGuard: true }, "", window.location.href);
+
+    window.addEventListener("popstate", () => {
+        if (allowBackNavigation) return;
+
+        openExitConfirm();
+        history.pushState({ mobileBackGuard: true }, "", window.location.href);
+        tryEnterFullscreen();
+    });
+}
+
 updateOrientationGate();
 tryLockLandscape();
+installMobileBackGuard();
 
 window.addEventListener("resize", updateOrientationGate);
 window.addEventListener("orientationchange", updateOrientationGate);
+document.addEventListener("fullscreenchange", () => {
+    if (!document.fullscreenElement) {
+        fullscreenRequested = false;
+        tryEnterFullscreen();
+    }
+});
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+        tryEnterFullscreen();
+    }
+});
 window.addEventListener(
     "touchstart",
     () => {
@@ -118,6 +159,16 @@ async function handleExitClick() {
 if (confirmExitYes) {
     confirmExitYes.addEventListener("click", (event) => {
         event.preventDefault();
+        allowBackNavigation = true;
         handleExitClick();
     });
 }
+
+document.querySelectorAll("#confirm-exit .confirm-no").forEach((button) => {
+    button.addEventListener("click", (event) => {
+        if (!button.getAttribute("href") || button.getAttribute("href") !== "#") return;
+        event.preventDefault();
+        closeExitConfirm();
+        tryEnterFullscreen();
+    });
+});
