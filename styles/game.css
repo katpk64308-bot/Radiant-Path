@@ -1,4 +1,4 @@
-﻿/* Reset basico */
+/* Reset basico */
 html,
 body {
     margin: 0;
@@ -57,10 +57,9 @@ body {
 
 .menu-confirm-box {
     width: min(92vw, 360px);
-    padding: 16px;
-    border-radius: 12px;
-    background: rgba(10, 10, 10, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 10px;
+    background: transparent;
+    border: none;
     color: #fff;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     text-align: center;
@@ -191,3 +190,4 @@ body.force-landscape #orientation-lock {
         touch-action: manipulation;
     }
 }
+

@@ -1,4 +1,4 @@
-﻿/* Reset bÃ¡sico */
+/* Reset básico */
 html,
 body {
     margin: 0;
@@ -120,6 +120,63 @@ button:hover,
     text-shadow: 0 0 14px rgba(255, 255, 255, 0.9);
 }
 
+.menu-confirm {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 10002;
+}
+
+.menu-confirm:target {
+    display: flex;
+}
+
+.menu-confirm-box {
+    width: min(92vw, 360px);
+    padding: 8px 10px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+}
+
+.menu-confirm-box p {
+    margin: 0 0 14px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.menu-confirm-actions {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.menu-confirm-actions a {
+    text-decoration: none;
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 13px;
+}
+
+.menu-confirm-actions .confirm-yes {
+    background: rgba(46, 213, 115, 0.25);
+    border-color: rgba(46, 213, 115, 0.6);
+}
+
+.menu-confirm-actions .confirm-no {
+    background: rgba(255, 71, 87, 0.22);
+    border-color: rgba(255, 71, 87, 0.55);
+}
+
 @media (max-width: 768px) {
     .fog-cloud {
         filter: blur(14px);
@@ -146,4 +203,5 @@ button:hover,
     }
 
 }
+
 

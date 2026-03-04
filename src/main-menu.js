@@ -2,6 +2,7 @@
 const fogLayer = document.getElementById("fire");
 const orientationOverlay = document.getElementById("orientation-lock-menu");
 const uiContainer = document.getElementById("ui-container");
+const confirmExitYes = document.getElementById("confirm-exit-yes");
 
 const isMobileViewport = window.matchMedia("(max-width: 900px), (pointer: coarse)").matches;
 const isSmallScreen = window.matchMedia("(max-width: 768px)").matches;
@@ -88,4 +89,35 @@ for (let i = 0; i < cloudCount; i++) {
     cloud.style.opacity = (0.28 + Math.random() * 0.27).toFixed(2);
 
     fogLayer.appendChild(cloud);
+}
+
+async function handleExitClick() {
+    try {
+        if (document.fullscreenElement && document.exitFullscreen) {
+            await document.exitFullscreen();
+        }
+    } catch (_) {
+        // Ignora falhas de saida de fullscreen.
+    }
+
+    try {
+        window.open("", "_self");
+        window.close();
+    } catch (_) {
+        // Alguns navegadores bloqueiam window.close em abas nao abertas via script.
+    }
+
+    // Fallback: remove o jogo da tela atual.
+    setTimeout(() => {
+        if (!window.closed) {
+            window.location.href = "about:blank";
+        }
+    }, 80);
+}
+
+if (confirmExitYes) {
+    confirmExitYes.addEventListener("click", (event) => {
+        event.preventDefault();
+        handleExitClick();
+    });
 }

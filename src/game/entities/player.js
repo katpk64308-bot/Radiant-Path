@@ -10,11 +10,11 @@ class Player {
         // Velocidades
         this.vx = 0;
         this.vy = 0;
-        this.speed = 3.5;
+        this.speed = 5.2;
 
         // Fisica
         this.gravity = 0.8;
-        this.jumpPower = -15;
+        this.jumpPower = -17;
         this.isGrounded = false;
 
         // Direcao atual do sprite (right | left)
