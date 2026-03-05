@@ -181,9 +181,7 @@ function installMobileBackGuard() {
 
 // Cria o layout das plataformas
 function buildPlatforms() {
-    const viewport = getViewportSize();
-    const isLargeDesktop = !isMobileDevice && (viewport.width >= 1200 || viewport.height >= 750);
-    const floorBottomGap = isLargeDesktop ? 0 : 61;
+    const floorBottomGap = 0;
 
     platforms = [
         new Floor(canvas.width, canvas.height, floorBottomGap), // chao
@@ -228,7 +226,7 @@ function resizeGameViewport() {
     const targetWidth = Math.max(BASE_GAME_WIDTH, rawWidth);
     const targetHeight = Math.max(BASE_GAME_HEIGHT, rawHeight);
     const isSmallMobileScreen = isMobileDevice && (rawWidth <= 950 || rawHeight <= 600);
-    const zoomOutFactor = isSmallMobileScreen ? 1.65 : 1;
+    const zoomOutFactor = isSmallMobileScreen ? 1.0 : 1;
     const renderWidth = Math.round(targetWidth * zoomOutFactor);
     const renderHeight = Math.round(targetHeight * zoomOutFactor);
 
