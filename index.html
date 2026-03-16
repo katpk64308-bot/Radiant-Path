@@ -93,6 +93,28 @@
     <script src="src/game/entities/player.js"></script>
     <script src="src/main-game.js"></script>
     <script src="src/main-menu.js"></script>
+    <script>
+        (function () {
+            const preventDefault = (event) => {
+                event.preventDefault();
+            };
+
+            const preventDefaultForPointer = (event) => {
+                if (event.pointerType === "touch" || event.pointerType === "pen") {
+                    event.preventDefault();
+                }
+            };
+
+            document.addEventListener("touchstart", preventDefault, { passive: false, capture: true });
+            document.addEventListener("pointerdown", preventDefaultForPointer, { passive: false, capture: true });
+            document.addEventListener("contextmenu", preventDefault, { capture: true });
+            document.addEventListener("dragstart", preventDefault, { capture: true });
+            document.addEventListener("selectstart", preventDefault, { capture: true });
+            document.addEventListener("gesturestart", preventDefault, { capture: true });
+            document.addEventListener("gesturechange", preventDefault, { capture: true });
+            document.addEventListener("gestureend", preventDefault, { capture: true });
+        })();
+    </script>
 </body>
 
 </html>

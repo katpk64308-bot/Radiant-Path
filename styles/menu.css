@@ -6,10 +6,30 @@ body {
     height: 100dvh;
     overflow: hidden;
     background: #000;
+    touch-action: none;
+    -ms-touch-action: none;
+    overscroll-behavior: none;
     -webkit-user-select: none;
     -ms-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
+}
+
+*,
+*::before,
+*::after {
+    -webkit-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-user-drag: none;
+}
+
+#menu-screen,
+#ui-container {
+    touch-action: none;
+    -ms-touch-action: none;
 }
 
 /* Fundo do menu */

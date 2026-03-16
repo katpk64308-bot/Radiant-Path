@@ -17,6 +17,13 @@ const lowCpu = navigator.hardwareConcurrency && navigator.hardwareConcurrency <=
 let fullscreenRequested = false;
 let allowBackNavigation = false;
 const exitConfirmHash = "#confirm-exit";
+const shouldBlockContextMenu =
+    window.matchMedia("(pointer: coarse)").matches || window.matchMedia("(max-width: 900px)").matches;
+
+function blockContextMenu(event) {
+    if (!shouldBlockContextMenu) return;
+    event.preventDefault();
+}
 
 function isPortraitMode() {
     return window.innerHeight > window.innerWidth;
@@ -101,6 +108,13 @@ function hideMenuScreen() {
 updateOrientationGate();
 tryLockLandscape();
 installMobileBackGuard();
+if (shouldBlockContextMenu) {
+    document.addEventListener("contextmenu", blockContextMenu);
+    document.addEventListener("selectstart", blockContextMenu);
+    document.addEventListener("dragstart", blockContextMenu);
+    document.addEventListener("copy", blockContextMenu);
+    document.addEventListener("cut", blockContextMenu);
+}
 
 window.addEventListener("resize", updateOrientationGate);
 window.addEventListener("orientationchange", updateOrientationGate);
