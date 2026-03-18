@@ -35,6 +35,98 @@ body {
     -ms-touch-action: none;
 }
 
+:root {
+    --ui-arrow-scale: 1.1;
+    --ui-arrow-x0: -1003px;
+    --ui-arrow-x1: -982px;
+    --ui-arrow-x2: -961px;
+    --ui-arrow-x3: -940px;
+    --ui-arrow-y: -1px;
+}
+
+@keyframes ui-arrow-frames {
+    0% {
+        background-position: var(--ui-arrow-x0) var(--ui-arrow-y);
+    }
+
+    16.666% {
+        background-position: var(--ui-arrow-x1) var(--ui-arrow-y);
+    }
+
+    33.333% {
+        background-position: var(--ui-arrow-x2) var(--ui-arrow-y);
+    }
+
+    50% {
+        background-position: var(--ui-arrow-x3) var(--ui-arrow-y);
+    }
+
+    66.666% {
+        background-position: var(--ui-arrow-x2) var(--ui-arrow-y);
+    }
+
+    83.333% {
+        background-position: var(--ui-arrow-x1) var(--ui-arrow-y);
+    }
+
+    100% {
+        background-position: var(--ui-arrow-x0) var(--ui-arrow-y);
+    }
+}
+
+.menu-arrowed {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-start;
+}
+
+.menu-arrowed::before,
+.menu-arrowed::after {
+    content: "";
+    width: 20px;
+    height: 19px;
+    flex: 0 0 auto;
+    background-image: url("../assets/anplayer/sprites.png");
+    background-repeat: no-repeat;
+    background-size: 1024px 1024px;
+    background-position: var(--ui-arrow-x0) var(--ui-arrow-y);
+    image-rendering: pixelated;
+    animation: ui-arrow-frames 0.9s step-end infinite;
+    transform: scale(var(--ui-arrow-scale));
+    transform-origin: center;
+    opacity: 0;
+    transition: opacity 160ms ease;
+}
+
+.menu-arrowed::before {
+    transform: scaleX(-1) scale(var(--ui-arrow-scale));
+}
+
+.menu-arrowed::after {
+    transform: scale(var(--ui-arrow-scale));
+}
+
+#confirm-menu .menu-arrowed:hover::before,
+#confirm-menu .menu-arrowed:hover::after,
+.menu-arrowed:hover::before,
+.menu-arrowed:hover::after,
+.menu-arrowed:focus-visible::before,
+.menu-arrowed:focus-visible::after {
+    opacity: 1;
+}
+
+#confirm-menu .menu-arrowed {
+    justify-content: center;
+}
+
+/* Fundo do jogo para evitar barras pretas ao redor do canvas */
+#game-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
+}
+
 /* Canvas do jogo */
 #gameCanvas {
     display: block;
@@ -113,6 +205,34 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.35);
     background: rgba(255, 255, 255, 0.08);
     font-size: 13px;
+}
+
+#confirm-menu .menu-confirm-actions {
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+#confirm-menu .menu-confirm-actions a {
+    width: min(240px, 78vw);
+    text-align: center;
+}
+
+#confirm-menu .menu-confirm-box {
+    background: transparent;
+    border-radius: 0;
+    padding: 8px 10px;
+    box-shadow: none;
+}
+
+#confirm-menu.menu-confirm {
+    background: rgba(0, 0, 0, 0.45);
+}
+
+#confirm-menu .menu-confirm-actions a {
+    border: none;
+    background: transparent;
+    padding: 8px 6px;
 }
 
 .menu-confirm-actions .confirm-yes {

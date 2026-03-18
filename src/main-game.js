@@ -5,7 +5,6 @@ if (!canvas) return;
 
 const ctx = canvas.getContext("2d");
 const orientationOverlay = document.getElementById("orientation-lock");
-const miniMap = document.getElementById("miniMap");
 const gameScreen = document.getElementById("game-screen");
 const menuScreen = document.getElementById("menu-screen");
 const isMobileDevice = window.matchMedia("(pointer: coarse)").matches;
@@ -16,6 +15,7 @@ const touchJump = document.getElementById("touch-jump");
 const confirmMenu = document.getElementById("confirm-menu");
 const confirmMenuYes = document.getElementById("confirm-menu-yes");
 const confirmMenuNo = document.getElementById("confirm-menu-no");
+const confirmMenuOptions = document.getElementById("confirm-menu-options");
 const BASE_GAME_WIDTH = 1366;
 const BASE_GAME_HEIGHT = 768;
 const BASE_GAME_ASPECT = BASE_GAME_WIDTH / BASE_GAME_HEIGHT;
@@ -213,9 +213,6 @@ function updateOrientationGate() {
         orientationOverlay.classList.remove("is-visible");
     }
 
-    if (miniMap) {
-        miniMap.style.display = forceLandscapeView ? "none" : "block";
-    }
 }
 
 function getViewportSize() {
@@ -259,10 +256,11 @@ function resizeGameViewport() {
 
     if (isMobileDevice) {
         const fitted = fitToAspect(rawWidth, rawHeight, BASE_GAME_ASPECT);
-        renderWidth = fitted.width;
-        renderHeight = fitted.height;
         displayWidth = fitted.width;
         displayHeight = fitted.height;
+        // Mantem o mesmo "tamanho de mundo" do PC e apenas escala a exibicao no CSS.
+        renderWidth = BASE_GAME_WIDTH;
+        renderHeight = BASE_GAME_HEIGHT;
     } else {
         const minGameWidth = BASE_GAME_WIDTH;
         const minGameHeight = BASE_GAME_HEIGHT;
@@ -486,17 +484,10 @@ function handleKeyUp(e) {
 // Eventos de entrada e de janela
 window.addEventListener("keydown", handleKeyDown);
 window.addEventListener("keyup", handleKeyUp);
-window.addEventListener("mousedown", () => {
-    if (isMenuConfirmOpen()) return;
-    if (player) player.jump();
-});
 window.addEventListener(
     "touchstart",
     (event) => {
         tryEnterFullscreen();
-        if (isMenuConfirmOpen()) return;
-        if (isEventInsideTouchControls(event)) return;
-        if (player) player.jump();
     },
     { passive: true }
 );
@@ -538,6 +529,14 @@ if (confirmMenuYes) {
 
 if (confirmMenuNo) {
     confirmMenuNo.addEventListener("click", (event) => {
+        event.preventDefault();
+        closeMenuConfirm();
+        tryEnterFullscreen();
+    });
+}
+
+if (confirmMenuOptions) {
+    confirmMenuOptions.addEventListener("click", (event) => {
         event.preventDefault();
         closeMenuConfirm();
         tryEnterFullscreen();

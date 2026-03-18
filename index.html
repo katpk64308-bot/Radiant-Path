@@ -31,11 +31,11 @@
             <div id="menu">
                 <h1>Radiant-Path</h1>
 
-                <a class="start-link" id="start-game" href="#">Start Game</a>
-                <button>Opcoes</button>
-                <button>Conquistas</button>
-                <button>Extras</button>
-                <a class="start-link" id="exit-button" href="#confirm-exit">Sair</a>
+                <a class="start-link menu-arrowed" id="start-game" href="#">Start Game</a>
+                <button class="menu-arrowed">Opcoes</button>
+                <button class="menu-arrowed">Conquistas</button>
+                <button class="menu-arrowed">Extras</button>
+                <a class="start-link menu-arrowed" id="exit-button" href="#confirm-exit">Sair</a>
             </div>
         </div>
 
@@ -55,10 +55,10 @@
 
         <div id="confirm-menu" class="menu-confirm">
             <div class="menu-confirm-box">
-                <p>Quer voltar ao menu?</p>
                 <div class="menu-confirm-actions">
-                    <a class="confirm-yes" id="confirm-menu-yes" href="#">Sim</a>
-                    <a class="confirm-no" id="confirm-menu-no" href="#">Nao</a>
+                    <a class="confirm-yes menu-arrowed" id="confirm-menu-no" href="#">Continuar</a>
+                    <a class="menu-arrowed" id="confirm-menu-options" href="#">Opcoes</a>
+                    <a class="confirm-no menu-arrowed" id="confirm-menu-yes" href="#">Sair</a>
                 </div>
             </div>
         </div>
@@ -66,18 +66,6 @@
         <div id="orientation-lock" aria-live="polite">
             <p>Gire o celular para jogar no modo paisagem.</p>
         </div>
-
-        <pre id="miniMap"
-            style="position: fixed; top: 10px; left: 10px; margin: 0; padding: 10px; background: rgba(0,0,0,0.6); color: #fff; font-family: monospace; z-index: 10;">
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
-[0,0,0,0,0,0,0,0,1,0,0,0,0,0,0]
-[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-        </pre>
 
         <canvas id="gameCanvas"></canvas>
 
