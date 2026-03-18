@@ -1,9 +1,13 @@
 // Entidade do jogador (movimento + fisica simples)
 class Player {
     constructor() {
+        const PLAYER_SCALE = 1.05;
+        const BASE_PLAYER_WIDTH = 60;
+        const BASE_PLAYER_HEIGHT = 68;
+
         // Tamanho e posicao inicial
-        this.width = 60;
-        this.height = 68;
+        this.width = Math.round(BASE_PLAYER_WIDTH * PLAYER_SCALE);
+        this.height = Math.round(BASE_PLAYER_HEIGHT * PLAYER_SCALE);
         this.x = 100;
         this.y = 200;
 
@@ -11,6 +15,7 @@ class Player {
         this.vx = 0;
         this.vy = 0;
         this.speed = 5.2;
+        this.inputDirection = 0;
 
         // Fisica
         this.gravity = 0.8;
@@ -49,11 +54,14 @@ class Player {
     }
 
     buildWalkRowFrames() {
-        const top = 2;
-        const leftStart = 2;
-        const frameHeight = 48;
+        // Linha de andar fica abaixo da linha de parado (2px de gap).
+        const idleTop = 1;
+        const idleHeight = 49;
         const gap = 2;
-        const frameWidths = [43, 42, 44, 43, 44, 44];
+        const top = idleTop + idleHeight + gap;
+        const leftStart = 1;
+        const frameHeight = 48;
+        const frameWidths = [44, 43, 43, 43, 43, 43];
 
         let currentX = leftStart;
         return frameWidths.map((width) => {
@@ -64,27 +72,20 @@ class Player {
     }
 
     buildIdleRowFrames() {
-        // Linha abaixo da animacao de andar:
-        // y base = 2 (topo da sheet) + 48 (altura andar) + 2 (gap) = 52
-        const baseY = 52;
+        // Linha de parado fica no topo da sheet.
+        const baseY = 1;
         const gap = 2;
+        const leftStart = 1;
+        const frameWidth = 41;
+        const frameHeight = 49;
+        const frameCount = 4;
 
-        const frames = [
-            { x: 2, y: baseY, width: 41, height: 49 },
-            { x: 45, y: baseY, width: 40, height: 49 },
-            { x: 87, y: baseY, width: 42, height: 49 },
-            // Ultimo frame padronizado com a mesma linha e altura dos demais
-            { x: 131, y: baseY, width: 42, height: 49 },
-        ];
+        let currentX = leftStart;
+        const frames = [];
 
-        // Validacao leve para manter os gaps de 2px entre os frames
-        for (let i = 1; i < frames.length; i++) {
-            const prev = frames[i - 1];
-            const curr = frames[i];
-            const expectedX = prev.x + prev.width + gap;
-            if (curr.x !== expectedX) {
-                frames[i].x = expectedX;
-            }
+        for (let i = 0; i < frameCount; i++) {
+            frames.push({ x: currentX, y: baseY, width: frameWidth, height: frameHeight });
+            currentX += frameWidth + gap;
         }
 
         return frames;
@@ -92,6 +93,7 @@ class Player {
 
     // Direcao horizontal: -1 (esquerda), 0 (parado), 1 (direita)
     setHorizontalInput(direction) {
+        this.inputDirection = direction;
         this.vx = direction * this.speed;
 
         if (direction < 0) this.facing = "left";
@@ -123,10 +125,12 @@ class Player {
             const prevTop = prevY;
             const prevRight = prevX + this.width;
             const prevLeft = prevX;
+            const surfaceY = typeof p.getSurfaceY === "function" ? p.getSurfaceY(this.x, this.width) : p.y;
+            const maxStepHeight = typeof p.getMaxStepHeight === "function" ? p.getMaxStepHeight() : 0;
 
             // Evita atravessar plataforma/chao em quedas rapidas (comum em telas altas)
-            if (horizontalOverlap && this.vy >= 0 && prevBottom <= p.y && this.y + this.height >= p.y) {
-                this.y = p.y - this.height;
+            if (horizontalOverlap && this.vy >= 0 && prevBottom <= surfaceY && this.y + this.height >= surfaceY) {
+                this.y = surfaceY - this.height;
                 this.vy = 0;
                 this.isGrounded = true;
                 continue;
@@ -146,9 +150,20 @@ class Player {
 
             if (!intersects) continue;
 
-            if (prevBottom <= p.y) {
+            const currentBottom = this.y + this.height;
+            if (this.vy >= 0 && horizontalOverlap && currentBottom >= surfaceY) {
+                const stepUp = currentBottom - surfaceY;
+                if (stepUp <= maxStepHeight) {
+                    this.y = surfaceY - this.height;
+                    this.vy = 0;
+                    this.isGrounded = true;
+                    continue;
+                }
+            }
+
+            if (prevBottom <= surfaceY) {
                 // caiu em cima
-                this.y = p.y - this.height;
+                this.y = surfaceY - this.height;
                 this.vy = 0;
                 this.isGrounded = true;
             } else if (prevTop >= p.y + p.height) {
@@ -177,7 +192,8 @@ class Player {
                         this.x + this.width > p.x;
 
                     if (!horizontalOverlap) continue;
-                    if (p.y < supportTop) supportTop = p.y;
+                    const surfaceY = typeof p.getSurfaceY === "function" ? p.getSurfaceY(this.x, this.width) : p.y;
+                    if (surfaceY < supportTop) supportTop = surfaceY;
                 }
             }
 
@@ -195,7 +211,7 @@ class Player {
     }
 
     getCurrentFrames() {
-        const nextAnimation = Math.abs(this.vx) > 0.01 ? "walk" : "idle";
+        const nextAnimation = Math.abs(this.inputDirection) > 0.01 ? "walk" : "idle";
 
         if (nextAnimation !== this.currentAnimation) {
             this.currentAnimation = nextAnimation;

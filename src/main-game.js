@@ -186,8 +186,17 @@ function installMobileBackGuard() {
 function buildPlatforms() {
     const floorBottomGap = 0;
 
+    const floor = new Floor(canvas.width, canvas.height, floorBottomGap);
+
+    const endWallWidth = 20;
+    const endWallHeight = Math.min(240, Math.max(140, Math.round(canvas.height * 0.3)));
+    const endWallX = floor.width - endWallWidth;
+    const endWallY = floor.y - endWallHeight;
+    const endWall = new Platform(endWallX, endWallY, endWallWidth, endWallHeight, "#1e9f4a");
+
     platforms = [
-        new Floor(canvas.width, canvas.height, floorBottomGap), // chao
+        floor, // chao
+        endWall, // rapinha no final
     ];
 }
 
@@ -274,10 +283,11 @@ function findNearestSupportTopForPlayer() {
 
         if (!horizontalOverlap) continue;
 
-        const distance = Math.abs(playerBottom - p.y);
+        const surfaceY = typeof p.getSurfaceY === "function" ? p.getSurfaceY(player.x, player.width) : p.y;
+        const distance = Math.abs(playerBottom - surfaceY);
         if (distance < bestDistance) {
             bestDistance = distance;
-            bestTop = p.y;
+            bestTop = surfaceY;
         }
     }
 
@@ -550,6 +560,11 @@ function gameLoop() {
     player.update(platforms, canvas.width, canvas.height);
     platforms.forEach((p) => p.draw(ctx));
     player.draw(ctx);
+    platforms.forEach((p) => {
+        if (typeof p.drawForeground === "function") {
+            p.drawForeground(ctx, player);
+        }
+    });
     drawSceneLighting();
 
     requestAnimationFrame(gameLoop);
