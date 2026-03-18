@@ -8,12 +8,14 @@ const uiContainer = document.getElementById("ui-container");
 const menuScreen = document.getElementById("menu-screen");
 const startGameButton = document.getElementById("start-game");
 const confirmExitYes = document.getElementById("confirm-exit-yes");
+const exitButton = document.getElementById("exit-button");
 
 const isMobileViewport = window.matchMedia("(pointer: coarse)").matches;
 const isSmallScreen = window.matchMedia("(max-width: 768px)").matches;
 const isVeryTallPhone = window.innerWidth <= 900 && window.innerHeight >= 1700;
 const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const lowCpu = navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4;
+const supportsPointerEvents = "PointerEvent" in window;
 let fullscreenRequested = false;
 let allowBackNavigation = false;
 const exitConfirmHash = "#confirm-exit";
@@ -80,6 +82,40 @@ function openExitConfirm() {
     if (window.location.hash !== exitConfirmHash) {
         window.location.hash = exitConfirmHash;
     }
+}
+
+function bindImmediateTap(element, handler) {
+    if (!element) return;
+    let lastTouchTime = 0;
+
+    if (supportsPointerEvents) {
+        element.addEventListener(
+            "pointerup",
+            (event) => {
+                if (event.pointerType !== "touch" && event.pointerType !== "pen") return;
+                lastTouchTime = Date.now();
+                handler(event);
+            },
+            { passive: false }
+        );
+    } else {
+        element.addEventListener(
+            "touchend",
+            (event) => {
+                lastTouchTime = Date.now();
+                handler(event);
+            },
+            { passive: false }
+        );
+    }
+
+    element.addEventListener("click", (event) => {
+        if (Date.now() - lastTouchTime < 700) {
+            event.preventDefault();
+            return;
+        }
+        handler(event);
+    });
 }
 
 function installMobileBackGuard() {
@@ -188,7 +224,7 @@ async function handleExitClick() {
 }
 
 if (confirmExitYes) {
-    confirmExitYes.addEventListener("click", (event) => {
+    bindImmediateTap(confirmExitYes, (event) => {
         event.preventDefault();
         allowBackNavigation = true;
         handleExitClick();
@@ -196,7 +232,7 @@ if (confirmExitYes) {
 }
 
 if (startGameButton) {
-    startGameButton.addEventListener("click", (event) => {
+    bindImmediateTap(startGameButton, (event) => {
         event.preventDefault();
         closeExitConfirm();
         hideMenuScreen();
@@ -207,8 +243,15 @@ if (startGameButton) {
     });
 }
 
+if (exitButton) {
+    bindImmediateTap(exitButton, (event) => {
+        event.preventDefault();
+        openExitConfirm();
+    });
+}
+
 document.querySelectorAll("#confirm-exit .confirm-no").forEach((button) => {
-    button.addEventListener("click", (event) => {
+    bindImmediateTap(button, (event) => {
         if (!button.getAttribute("href") || button.getAttribute("href") !== "#") return;
         event.preventDefault();
         closeExitConfirm();

@@ -133,6 +133,7 @@ button,
     text-shadow: 0 0 8px rgba(199, 125, 255, 0.5);
     transition: transform 160ms ease, color 160ms ease, text-shadow 160ms ease;
     cursor: pointer;
+    touch-action: manipulation;
 }
 
 button:hover,
@@ -187,6 +188,7 @@ button:hover,
     border: 1px solid rgba(255, 255, 255, 0.35);
     background: rgba(255, 255, 255, 0.08);
     font-size: 13px;
+    touch-action: manipulation;
 }
 
 .menu-confirm-actions .confirm-yes {
