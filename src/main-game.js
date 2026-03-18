@@ -18,6 +18,7 @@ const confirmMenuYes = document.getElementById("confirm-menu-yes");
 const confirmMenuNo = document.getElementById("confirm-menu-no");
 const BASE_GAME_WIDTH = 1366;
 const BASE_GAME_HEIGHT = 768;
+const BASE_GAME_ASPECT = BASE_GAME_WIDTH / BASE_GAME_HEIGHT;
 const SCENE_DARKNESS = 0.1; // 0.10 = cenario ~90% visivel
 const LIGHT_INNER_RADIUS_FACTOR = 0.18;
 const LIGHT_OUTER_RADIUS_FACTOR = 0.6;
@@ -231,23 +232,51 @@ function getViewportSize() {
     };
 }
 
+function fitToAspect(rawWidth, rawHeight, aspectRatio) {
+    if (rawWidth <= 0 || rawHeight <= 0) {
+        return { width: rawWidth, height: rawHeight };
+    }
+
+    if (rawWidth / rawHeight > aspectRatio) {
+        const height = rawHeight;
+        const width = Math.round(height * aspectRatio);
+        return { width, height };
+    }
+
+    const width = rawWidth;
+    const height = Math.round(width / aspectRatio);
+    return { width, height };
+}
+
 function resizeGameViewport() {
     const viewport = getViewportSize();
     const rawWidth = forceLandscapeView ? viewport.height : viewport.width;
     const rawHeight = forceLandscapeView ? viewport.width : viewport.height;
-    const isSmallMobileScreen = isMobileDevice && (rawWidth <= 950 || rawHeight <= 600);
-    const minGameWidth = isSmallMobileScreen ? rawWidth : BASE_GAME_WIDTH;
-    const minGameHeight = isSmallMobileScreen ? rawHeight : BASE_GAME_HEIGHT;
-    const targetWidth = Math.max(minGameWidth, rawWidth);
-    const targetHeight = Math.max(minGameHeight, rawHeight);
-    const zoomOutFactor = 1;
-    const renderWidth = Math.round(targetWidth * zoomOutFactor);
-    const renderHeight = Math.round(targetHeight * zoomOutFactor);
+    let renderWidth = rawWidth;
+    let renderHeight = rawHeight;
+    let displayWidth = rawWidth;
+    let displayHeight = rawHeight;
+
+    if (isMobileDevice) {
+        const fitted = fitToAspect(rawWidth, rawHeight, BASE_GAME_ASPECT);
+        renderWidth = fitted.width;
+        renderHeight = fitted.height;
+        displayWidth = fitted.width;
+        displayHeight = fitted.height;
+    } else {
+        const minGameWidth = BASE_GAME_WIDTH;
+        const minGameHeight = BASE_GAME_HEIGHT;
+        const targetWidth = Math.max(minGameWidth, rawWidth);
+        const targetHeight = Math.max(minGameHeight, rawHeight);
+        const zoomOutFactor = 1;
+        renderWidth = Math.round(targetWidth * zoomOutFactor);
+        renderHeight = Math.round(targetHeight * zoomOutFactor);
+    }
 
     canvas.width = renderWidth;
     canvas.height = renderHeight;
-    canvas.style.width = rawWidth + "px";
-    canvas.style.height = rawHeight + "px";
+    canvas.style.width = displayWidth + "px";
+    canvas.style.height = displayHeight + "px";
 }
 
 function syncPlayerToResizedViewport(prevWidth, prevHeight, nextWidth, nextHeight) {
