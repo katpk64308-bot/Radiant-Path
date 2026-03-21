@@ -42,6 +42,7 @@ body {
     --ui-arrow-x2: -961px;
     --ui-arrow-x3: -940px;
     --ui-arrow-y: -1px;
+    --game-zoom: 1;
 }
 
 @keyframes ui-arrow-frames {
@@ -81,13 +82,19 @@ body {
     justify-content: flex-start;
 }
 
+.server-back.menu-arrowed {
+    justify-content: center;
+    width: max-content;
+    margin: 0 auto;
+}
+
 .menu-arrowed::before,
 .menu-arrowed::after {
     content: "";
     width: 20px;
     height: 19px;
     flex: 0 0 auto;
-    background-image: url("../assets/anplayer/sprites.png");
+    background-image: url("../assets/img/icones/icn.png");
     background-repeat: no-repeat;
     background-size: 1024px 1024px;
     background-position: var(--ui-arrow-x0) var(--ui-arrow-y);
@@ -125,6 +132,7 @@ body {
     position: fixed;
     inset: 0;
     background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
+    overflow: hidden;
 }
 
 /* Canvas do jogo */
@@ -133,7 +141,7 @@ body {
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(var(--game-zoom));
     width: auto;
     height: auto;
     max-width: none;
@@ -154,6 +162,46 @@ body {
     border-radius: 8px;
     font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     font-size: 12px;
+}
+
+#inventory-button {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 10001;
+    background: rgba(0, 0, 0, 0.65);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 10px;
+    border-radius: 8px;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+#inventory-screen {
+    position: fixed;
+    inset: 0;
+    display: none;
+    background: #000;
+    z-index: 10004;
+}
+
+#inventory-screen.is-open {
+    display: flex;
+}
+
+#inventory-back {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
 }
 
 .menu-confirm {
@@ -248,7 +296,7 @@ body {
 body.force-landscape #gameCanvas {
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%) rotate(90deg);
+    transform: translate(-50%, -50%) rotate(90deg) scale(var(--game-zoom));
     transform-origin: center center;
 }
 

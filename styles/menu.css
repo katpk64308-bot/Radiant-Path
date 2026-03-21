@@ -37,11 +37,12 @@ body {
     position: fixed;
     width: 100%;
     height: 100dvh;
-    background: linear-gradient(rgba(6, 8, 14, 0.42), rgba(6, 8, 14, 0.42)), url("../assets/img/menu.png") center / cover no-repeat;
+    background: linear-gradient(rgba(6, 8, 14, 0.42), rgba(6, 8, 14, 0.42)), url("../assets/img/mapa/menu.png") center / cover no-repeat;
     overflow: hidden;
 }
 
-#orientation-lock-menu {
+#orientation-lock-menu,
+#orientation-lock-server {
     position: fixed;
     inset: 0;
     display: none;
@@ -57,7 +58,8 @@ body {
     z-index: 9999;
 }
 
-#orientation-lock-menu.is-visible {
+#orientation-lock-menu.is-visible,
+#orientation-lock-server.is-visible {
     display: flex;
 }
 
@@ -228,4 +230,144 @@ button:hover,
 
 }
 
+#server-screen {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.72);
+    z-index: 10003;
+}
 
+.server-ui {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: linear-gradient(rgba(6, 8, 14, 0.42), rgba(6, 8, 14, 0.42)), url("../assets/img/mapa/menu.png") center / cover no-repeat;
+}
+
+.server-select-box {
+    width: min(96vw, 940px);
+    padding: 36px 44px 42px;
+    background: rgba(8, 10, 16, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    color: #fff;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.45);
+}
+
+.server-select-box p {
+    margin: 0 0 14px;
+    font-size: 17px;
+    font-weight: 700;
+}
+
+.server-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 10px 24px;
+    justify-items: center;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.server-slot {
+    --slot-size: 140px;
+    --icn-scale: min(calc((var(--slot-size) - 2px) / 300px),
+            calc((var(--slot-size) - 2px) / 191px));
+    width: var(--slot-size);
+    height: var(--slot-size);
+    border-radius: 0;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    box-shadow: none;
+    cursor: pointer;
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    position: relative;
+    overflow: visible;
+}
+
+.server-slot::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: -34%;
+    transform: translateX(-50%) scale(calc(var(--icn-scale) * 2.6));
+    width: 300px;
+    height: 191px;
+    background-image: url("../assets/img/icones/icn.png");
+    background-repeat: no-repeat;
+    background-size: 1024px 1024px;
+    background-position: -1px -832px;
+    transform-origin: bottom center;
+    opacity: 0.95;
+    z-index: 0;
+}
+
+.server-slot:hover,
+.server-slot:focus-visible {
+    transform: translateY(-2px) scale(1.04);
+    border-color: transparent;
+    box-shadow: none;
+}
+
+.server-slot:nth-child(1) {
+    grid-column: 2;
+    grid-row: 1;
+    margin-top: 140px;
+}
+
+.server-slot:nth-child(2) {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.server-slot:nth-child(3) {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+.server-label {
+    position: relative;
+    z-index: 1;
+    text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+
+.server-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: auto;
+    padding: 8px 12px;
+    border-radius: 0;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    cursor: pointer;
+    transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+    text-shadow: 0 0 10px rgba(199, 125, 255, 0.45);
+}
+
+.server-back:hover,
+.server-back:focus-visible {
+    transform: translateY(-1px);
+    border-color: transparent;
+    box-shadow: none;
+}

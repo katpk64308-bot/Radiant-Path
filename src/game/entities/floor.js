@@ -3,18 +3,23 @@ const ENV_TEXTURE_SCALE = 1.45;
 
 class Floor {
     constructor(width, height, bottomGap = 61) {
-        this.srcTileSize = 25;
+        // Coordenadas 1-based a partir da base da sheet (origem no canto inferior esquerdo).
+        this.groundCoords = { x1: 28, y1: 2, x2: 52, y2: 26 };
+        this.waterStaticCoords = { x1: 132, y1: 54, x2: 156, y2: 77 };
+        this.sheetBottomPadding = 2; // 1px de padding + ajuste de origem
+
+        this.srcTileWidth = this.groundCoords.x2 - this.groundCoords.x1 + 1;
+        this.srcTileHeight = this.groundCoords.y2 - this.groundCoords.y1 + 1;
+        this.srcTileSize = this.srcTileWidth;
         this.tileScale = ENV_TEXTURE_SCALE;
-        this.tileSize = Math.round(this.srcTileSize * this.tileScale);
-        this.groundTileStartX = 1;
-        this.groundTileBottomMargin = 1;
-        this.waterRowOffset = 52;
+        this.tileSize = Math.round(this.srcTileWidth * this.tileScale);
         this.waterFrameCount = 5;
         this.waterFrameGap = 1;
-        this.waterFrameStartX = 1;
+        this.waterFrameStartX = 2; // 1-based (vira 0-based no resolve)
         this.waterFrameDuration = 140;
         this.waterFrameIndex = 0;
         this.lastWaterFrameTime = performance.now();
+        this.useStaticRamp = true;
         this.waterForegroundAlpha = 0.7;
         this.groundInset = Math.max(1, Math.round(1 * this.tileScale));
         this.cachedTextureCoords = null;
@@ -24,18 +29,19 @@ class Floor {
         this.y = height - this.height - bottomGap;
         this.width = width;
         this.color = "#2ed573";
-        const idealWater = Math.round(width * 0.22);
-        this.waterWidth = Math.max(160, Math.min(320, idealWater));
+        const idealWater = Math.round(width * 0.32);
+        this.waterWidth = Math.max(220, Math.min(460, idealWater));
         this.waterInset = Math.max(1, Math.round(10 * this.tileScale));
+        // Usa a largura de 1 tile para a rampa e anima o frame (sem ficar fixo no final).
         this.waterRampWidth = Math.min(this.tileSize, this.waterWidth);
         this.waterColorTop = "#4fc3f7";
         this.waterColorBottom = "#0288d1";
 
         this.spriteSheet = new Image();
         this.spriteSheet.onerror = () => {
-            console.warn("Falha ao carregar texturas do chao/agua: assets/anplayer/sprites.png");
+            console.warn("Falha ao carregar texturas do chao/agua: assets/img/mapa/mapa-fundo.png");
         };
-        this.spriteSheet.src = "assets/anplayer/sprites.png";
+        this.spriteSheet.src = "assets/img/mapa/mapa-fundo.png";
     }
 
     getSurfaceY(playerX, playerWidth) {
@@ -62,25 +68,46 @@ class Floor {
         if (this.cachedTextureCoords) return this.cachedTextureCoords;
         if (!this.spriteSheet.complete || this.spriteSheet.naturalWidth <= 0) return null;
 
-        const tile = this.srcTileSize;
-        const groundY = this.spriteSheet.naturalHeight - tile - this.groundTileBottomMargin;
-        const waterY = groundY - this.waterRowOffset;
+        const sheetBottomY = this.spriteSheet.naturalHeight - this.sheetBottomPadding;
+        const groundRect = this.resolveRectFromBottomCoords(this.groundCoords, sheetBottomY);
+        const waterStaticRect = this.resolveRectFromBottomCoords(this.waterStaticCoords, sheetBottomY);
+        const waterStartX = this.waterFrameStartX - 1;
 
-        if (groundY < 0 || waterY < 0) return null;
-
-        const groundX = this.groundTileStartX;
-        const waterStartX = this.waterFrameStartX;
-        const rampX = waterStartX + this.waterFrameCount * (tile + this.waterFrameGap);
+        if (!groundRect || !waterStaticRect) return null;
 
         this.cachedTextureCoords = {
-            groundX,
-            groundY,
-            waterY,
+            groundX: groundRect.x,
+            groundY: groundRect.y,
+            groundW: groundRect.width,
+            groundH: groundRect.height,
+            waterY: waterStaticRect.y,
+            waterFrameW: waterStaticRect.width,
+            waterFrameH: waterStaticRect.height,
             waterStartX,
-            rampX,
+            waterStaticX: waterStaticRect.x,
+            waterStaticW: waterStaticRect.width,
+            waterStaticH: waterStaticRect.height,
         };
 
         return this.cachedTextureCoords;
+    }
+
+    resolveRectFromBottomCoords(coords, sheetBottomY) {
+        if (!coords) return null;
+        const left = Math.min(coords.x1, coords.x2) - 1;
+        const right = Math.max(coords.x1, coords.x2) - 1;
+        const bottom = Math.min(coords.y1, coords.y2) - 1;
+        const top = Math.max(coords.y1, coords.y2) - 1;
+        const width = right - left + 1;
+        const height = top - bottom + 1;
+        const y = sheetBottomY - top;
+
+        return {
+            x: left,
+            y,
+            width,
+            height,
+        };
     }
 
     updateWaterAnimation(now) {
@@ -158,18 +185,24 @@ class Floor {
         ctx.fillRect(waterX + this.waterWidth - 2, waterY, 2, waterH);
     }
 
-    drawWaterLayer(ctx, coords) {
+    drawWaterLayer(ctx, coords, includeBase = true) {
         if (this.waterWidth <= 0) return;
 
-        const srcTile = this.srcTileSize;
+        const srcTileW = coords.waterFrameW;
+        const srcTileH = coords.waterFrameH;
         const destTile = this.tileSize;
         const waterX = this.x;
         const waterY = this.y;
         const waterH = this.height;
-        const rampWidth = Math.min(destTile, this.waterWidth);
+        const rampWidth = Math.min(destTile, this.waterWidth, this.waterRampWidth);
         const animatedWidth = Math.max(0, this.waterWidth - rampWidth);
 
-        const frameStride = srcTile + this.waterFrameGap;
+        // Base para impedir que o chao "vaze" pela transparencia da agua.
+        if (includeBase) {
+            this.drawWaterBase(ctx);
+        }
+
+        const frameStride = srcTileW + this.waterFrameGap;
         const frameX = coords.waterStartX + this.waterFrameIndex * frameStride;
 
         if (animatedWidth > 0) {
@@ -177,8 +210,8 @@ class Floor {
                 ctx,
                 frameX,
                 coords.waterY,
-                srcTile,
-                srcTile,
+                srcTileW,
+                srcTileH,
                 waterX,
                 waterY,
                 animatedWidth,
@@ -188,17 +221,20 @@ class Floor {
 
         if (rampWidth > 0) {
             const rampDestX = waterX + animatedWidth;
+            const baseRampSrcW = this.useStaticRamp ? coords.waterStaticW : srcTileW;
+            const baseRampSrcH = this.useStaticRamp ? coords.waterStaticH : srcTileH;
+            const rampSrcX = this.useStaticRamp ? coords.waterStaticX : frameX;
             const rampSrcW =
                 rampWidth < destTile
-                    ? Math.max(1, Math.round((rampWidth / destTile) * srcTile))
-                    : srcTile;
+                    ? Math.max(1, Math.round((rampWidth / destTile) * baseRampSrcW))
+                    : baseRampSrcW;
 
             ctx.drawImage(
                 this.spriteSheet,
-                coords.rampX,
+                rampSrcX,
                 coords.waterY,
                 rampSrcW,
-                srcTile,
+                baseRampSrcH,
                 rampDestX,
                 waterY,
                 rampWidth,
@@ -207,8 +243,21 @@ class Floor {
         }
     }
 
+    drawWaterBase(ctx) {
+        const waterX = this.x;
+        const waterY = this.y;
+        const waterH = this.height;
+        if (this.waterWidth <= 0) return;
+
+        const waterGradient = ctx.createLinearGradient(0, waterY, 0, waterY + waterH);
+        waterGradient.addColorStop(0, this.waterColorTop);
+        waterGradient.addColorStop(1, this.waterColorBottom);
+
+        ctx.fillStyle = waterGradient;
+        ctx.fillRect(waterX, waterY, this.waterWidth, waterH);
+    }
+
     drawTextured(ctx, coords) {
-        const tile = this.srcTileSize;
         const now = performance.now();
         this.updateWaterAnimation(now);
 
@@ -219,15 +268,15 @@ class Floor {
             ctx,
             coords.groundX,
             coords.groundY,
-            tile,
-            tile,
+            coords.groundW,
+            coords.groundH,
             this.x,
             this.y,
             this.width,
             this.height
         );
 
-        this.drawWaterLayer(ctx, coords);
+        this.drawWaterLayer(ctx, coords, true);
 
         ctx.restore();
     }
@@ -266,7 +315,7 @@ class Floor {
             return;
         }
 
-        this.drawWaterLayer(ctx, coords);
+        this.drawWaterLayer(ctx, coords, false);
         ctx.restore();
     }
 

@@ -9,6 +9,11 @@ const menuScreen = document.getElementById("menu-screen");
 const startGameButton = document.getElementById("start-game");
 const confirmExitYes = document.getElementById("confirm-exit-yes");
 const exitButton = document.getElementById("exit-button");
+const serverScreen = document.getElementById("server-screen");
+const serverUI = serverScreen ? serverScreen.querySelector(".server-ui") : null;
+const orientationOverlayServer = document.getElementById("orientation-lock-server");
+const serverSlots = serverScreen ? serverScreen.querySelectorAll(".server-slot") : [];
+const serverBack = serverScreen ? serverScreen.querySelector(".server-back") : null;
 
 const isMobileViewport = window.matchMedia("(pointer: coarse)").matches;
 const isSmallScreen = window.matchMedia("(max-width: 768px)").matches;
@@ -33,13 +38,23 @@ function isPortraitMode() {
 
 function updateOrientationGate() {
     const blocked = isMobileViewport && isPortraitMode();
+    const menuVisible = menuScreen && menuScreen.style.display !== "none";
+    const serverVisible = serverScreen && serverScreen.style.display !== "none";
 
     if (orientationOverlay) {
-        orientationOverlay.classList.toggle("is-visible", blocked);
+        orientationOverlay.classList.toggle("is-visible", blocked && menuVisible);
     }
 
     if (uiContainer) {
-        uiContainer.style.visibility = blocked ? "hidden" : "visible";
+        uiContainer.style.visibility = blocked && menuVisible ? "hidden" : "visible";
+    }
+
+    if (orientationOverlayServer) {
+        orientationOverlayServer.classList.toggle("is-visible", blocked && serverVisible);
+    }
+
+    if (serverUI) {
+        serverUI.style.visibility = blocked && serverVisible ? "hidden" : "visible";
     }
 }
 
@@ -134,11 +149,29 @@ function installMobileBackGuard() {
 
 function showMenuScreen() {
     if (menuScreen) menuScreen.style.display = "block";
+    if (serverScreen) serverScreen.style.display = "none";
     updateOrientationGate();
 }
 
 function hideMenuScreen() {
     if (menuScreen) menuScreen.style.display = "none";
+}
+
+function showServerScreen() {
+    if (serverScreen) serverScreen.style.display = "block";
+    updateOrientationGate();
+}
+
+function hideServerScreen() {
+    if (serverScreen) serverScreen.style.display = "none";
+}
+
+function enterGameFromMenu() {
+    hideMenuScreen();
+
+    if (window.GameScreenAPI && typeof window.GameScreenAPI.openGameFromMenu === "function") {
+        window.GameScreenAPI.openGameFromMenu();
+    }
 }
 
 updateOrientationGate();
@@ -236,10 +269,25 @@ if (startGameButton) {
         event.preventDefault();
         closeExitConfirm();
         hideMenuScreen();
+        showServerScreen();
+    });
+}
 
-        if (window.GameScreenAPI && typeof window.GameScreenAPI.openGameFromMenu === "function") {
-            window.GameScreenAPI.openGameFromMenu();
-        }
+if (serverSlots && serverSlots.length) {
+    serverSlots.forEach((slot) => {
+        bindImmediateTap(slot, (event) => {
+            event.preventDefault();
+            hideServerScreen();
+            enterGameFromMenu();
+        });
+    });
+}
+
+if (serverBack) {
+    bindImmediateTap(serverBack, (event) => {
+        event.preventDefault();
+        hideServerScreen();
+        showMenuScreen();
     });
 }
 

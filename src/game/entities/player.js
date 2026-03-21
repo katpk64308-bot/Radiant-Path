@@ -28,18 +28,23 @@ class Player {
         // Controle de animacao
         this.idleFrameDuration = 200; // 0.2s
         this.walkFrameDuration = 70; // 0.07s
+        this.jumpFrameDuration = 110;
+        this.fallFrameDuration = 120;
+        this.jumpPrepareDuration = 120;
         this.frameIndex = 0;
         this.lastFrameTime = performance.now();
         this.currentAnimation = "idle";
+        this.jumpPrepUntil = 0;
 
         this.spriteSheet = new Image();
         this.spriteSheet.onerror = () => {
-            console.warn("Falha ao carregar sprite sheet: assets/anplayer/sprites.png");
+            console.warn("Falha ao carregar sprite sheet: assets/img/player/player.png");
         };
-        this.spriteSheet.src = "assets/anplayer/sprites.png";
+        this.spriteSheet.src = "assets/img/player/player.png";
 
         const walkRowFrames = this.buildWalkRowFrames();
         const idleRowFrames = this.buildIdleRowFrames();
+        const jumpFrames = this.buildJumpFrames();
 
         this.animations = {
             idle: {
@@ -49,6 +54,18 @@ class Player {
             walk: {
                 right: walkRowFrames,
                 left: walkRowFrames,
+            },
+            jumpPrepare: {
+                right: [jumpFrames.prepare],
+                left: [jumpFrames.prepare],
+            },
+            jumpRise: {
+                right: jumpFrames.rise,
+                left: jumpFrames.rise,
+            },
+            fall: {
+                right: jumpFrames.fall,
+                left: jumpFrames.fall,
             },
         };
     }
@@ -89,6 +106,26 @@ class Player {
         }
 
         return frames;
+    }
+
+    buildJumpFrames() {
+        // Linha de pulo fica 1px abaixo da linha de andar.
+        const walkTop = 52;
+        const walkHeight = 48;
+        const top = walkTop + walkHeight + 1;
+        const leftStart = 1;
+
+        const prepare = { x: leftStart, y: top, width: 42, height: 49 };
+        const rise1 = { x: prepare.x + prepare.width, y: top, width: 43, height: 48 };
+        const rise2 = { x: rise1.x + rise1.width + 1, y: top, width: 42, height: 48 };
+        const fall1 = { x: rise2.x + rise2.width + 1, y: top, width: 42, height: 48 };
+        const fall2 = { x: fall1.x + fall1.width + 1, y: top, width: 40, height: 49 };
+
+        return {
+            prepare,
+            rise: [rise1, rise2],
+            fall: [fall1, fall2],
+        };
     }
 
     // Direcao horizontal: -1 (esquerda), 0 (parado), 1 (direita)
@@ -201,17 +238,30 @@ class Player {
             this.vy = 0;
             this.isGrounded = true;
         }
+
+        if (this.isGrounded) {
+            this.jumpPrepUntil = 0;
+        }
     }
 
     // Pulo simples
     jump() {
         if (this.isGrounded) {
             this.vy = this.jumpPower;
+            this.jumpPrepUntil = performance.now() + this.jumpPrepareDuration;
         }
     }
 
     getCurrentFrames() {
-        const nextAnimation = Math.abs(this.inputDirection) > 0.01 ? "walk" : "idle";
+        let nextAnimation = Math.abs(this.inputDirection) > 0.01 ? "walk" : "idle";
+
+        if (!this.isGrounded) {
+            if (this.vy < 0) {
+                nextAnimation = performance.now() < this.jumpPrepUntil ? "jumpPrepare" : "jumpRise";
+            } else {
+                nextAnimation = "fall";
+            }
+        }
 
         if (nextAnimation !== this.currentAnimation) {
             this.currentAnimation = nextAnimation;
@@ -231,10 +281,11 @@ class Player {
         const frames = this.getCurrentFrames();
         if (!frames || frames.length === 0) return;
 
-        const frameDuration =
-            this.currentAnimation === "walk"
-                ? this.walkFrameDuration
-                : this.idleFrameDuration;
+        let frameDuration = this.idleFrameDuration;
+        if (this.currentAnimation === "walk") frameDuration = this.walkFrameDuration;
+        if (this.currentAnimation === "jumpPrepare") frameDuration = this.jumpPrepareDuration;
+        if (this.currentAnimation === "jumpRise") frameDuration = this.jumpFrameDuration;
+        if (this.currentAnimation === "fall") frameDuration = this.fallFrameDuration;
 
         if (now - this.lastFrameTime >= frameDuration) {
             this.frameIndex = (this.frameIndex + 1) % frames.length;

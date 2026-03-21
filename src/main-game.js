@@ -16,6 +16,9 @@ const confirmMenu = document.getElementById("confirm-menu");
 const confirmMenuYes = document.getElementById("confirm-menu-yes");
 const confirmMenuNo = document.getElementById("confirm-menu-no");
 const confirmMenuOptions = document.getElementById("confirm-menu-options");
+const inventoryButton = document.getElementById("inventory-button");
+const inventoryScreen = document.getElementById("inventory-screen");
+const inventoryBack = document.getElementById("inventory-back");
 const BASE_GAME_WIDTH = 1366;
 const BASE_GAME_HEIGHT = 768;
 const BASE_GAME_ASPECT = BASE_GAME_WIDTH / BASE_GAME_HEIGHT;
@@ -46,6 +49,14 @@ function isMenuConfirmOpen() {
     return !!(confirmMenu && confirmMenu.classList.contains("is-open"));
 }
 
+function isInventoryOpen() {
+    return !!(inventoryScreen && inventoryScreen.classList.contains("is-open"));
+}
+
+function isOverlayOpen() {
+    return isMenuConfirmOpen() || isInventoryOpen();
+}
+
 function clearControls() {
     controls.left = false;
     controls.right = false;
@@ -70,6 +81,22 @@ function closeMenuConfirm() {
 function openMenuConfirm() {
     if (confirmMenu) {
         confirmMenu.classList.add("is-open");
+    }
+    blockPlayerInputs();
+}
+
+function closeInventory() {
+    if (inventoryScreen) {
+        inventoryScreen.classList.remove("is-open");
+        inventoryScreen.setAttribute("aria-hidden", "true");
+    }
+    blockPlayerInputs();
+}
+
+function openInventory() {
+    if (inventoryScreen) {
+        inventoryScreen.classList.add("is-open");
+        inventoryScreen.setAttribute("aria-hidden", "false");
     }
     blockPlayerInputs();
 }
@@ -122,7 +149,7 @@ function setupTouchControls() {
     touchControlsReady = true;
 
     analogBase.addEventListener("pointerdown", (event) => {
-        if (isMenuConfirmOpen()) return;
+        if (isOverlayOpen()) return;
 
         analogActive = true;
         analogPointerId = event.pointerId;
@@ -149,7 +176,7 @@ function setupTouchControls() {
     });
 
     touchJump.addEventListener("pointerdown", (event) => {
-        if (isMenuConfirmOpen()) return;
+        if (isOverlayOpen()) return;
         if (player) player.jump();
         event.preventDefault();
     });
@@ -245,6 +272,22 @@ function fitToAspect(rawWidth, rawHeight, aspectRatio) {
     return { width, height };
 }
 
+function coverToAspect(rawWidth, rawHeight, aspectRatio) {
+    if (rawWidth <= 0 || rawHeight <= 0) {
+        return { width: rawWidth, height: rawHeight };
+    }
+
+    if (rawWidth / rawHeight > aspectRatio) {
+        const width = rawWidth;
+        const height = Math.round(width / aspectRatio);
+        return { width, height };
+    }
+
+    const height = rawHeight;
+    const width = Math.round(height * aspectRatio);
+    return { width, height };
+}
+
 function resizeGameViewport() {
     const viewport = getViewportSize();
     const rawWidth = forceLandscapeView ? viewport.height : viewport.width;
@@ -255,9 +298,10 @@ function resizeGameViewport() {
     let displayHeight = rawHeight;
 
     if (isMobileDevice) {
-        const fitted = fitToAspect(rawWidth, rawHeight, BASE_GAME_ASPECT);
-        displayWidth = fitted.width;
-        displayHeight = fitted.height;
+        // Preenche a tela no mobile, evitando bordas na lateral.
+        const covered = coverToAspect(rawWidth, rawHeight, BASE_GAME_ASPECT);
+        displayWidth = covered.width;
+        displayHeight = covered.height;
         // Mantem o mesmo "tamanho de mundo" do PC e apenas escala a exibicao no CSS.
         renderWidth = BASE_GAME_WIDTH;
         renderHeight = BASE_GAME_HEIGHT;
@@ -402,6 +446,7 @@ function hideGameScreen() {
 
 function returnToMenuScreen() {
     closeMenuConfirm();
+    closeInventory();
     gameRunning = false;
     blockPlayerInputs();
     hideGameScreen();
@@ -423,7 +468,7 @@ function openGameFromMenu() {
 
 // Tecla pressionada
 function handleKeyDown(e) {
-    if (isMenuConfirmOpen()) {
+    if (isOverlayOpen()) {
         blockPlayerInputs();
         e.preventDefault();
         return;
@@ -455,7 +500,7 @@ function handleKeyDown(e) {
 
 // Tecla solta
 function handleKeyUp(e) {
-    if (isMenuConfirmOpen()) {
+    if (isOverlayOpen()) {
         blockPlayerInputs();
         e.preventDefault();
         return;
@@ -543,6 +588,26 @@ if (confirmMenuOptions) {
     });
 }
 
+if (inventoryButton) {
+    inventoryButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (isInventoryOpen()) {
+            closeInventory();
+            tryEnterFullscreen();
+            return;
+        }
+        openInventory();
+    });
+}
+
+if (inventoryBack) {
+    inventoryBack.addEventListener("click", (event) => {
+        event.preventDefault();
+        closeInventory();
+        tryEnterFullscreen();
+    });
+}
+
 const backMenuButton = document.getElementById("back-menu");
 if (backMenuButton) {
     backMenuButton.addEventListener("click", (event) => {
@@ -552,9 +617,13 @@ if (backMenuButton) {
 }
 
 window.addEventListener("keydown", (event) => {
-    if (event.code === "Escape" && isMenuConfirmOpen()) {
+    if (event.code === "Escape" && isOverlayOpen()) {
         event.preventDefault();
-        closeMenuConfirm();
+        if (isInventoryOpen()) {
+            closeInventory();
+        } else {
+            closeMenuConfirm();
+        }
         tryEnterFullscreen();
     }
 });
@@ -569,7 +638,7 @@ function gameLoop() {
     if (!gameRunning) return;
     updateOrientationGate();
 
-    if (isMenuConfirmOpen()) {
+    if (isOverlayOpen()) {
         blockPlayerInputs();
         requestAnimationFrame(gameLoop);
         return;

@@ -10,8 +10,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <title>Radiant-Path</title>
-    <link rel="icon" type="image/png" href="assets/img/icone.png">
-    <link rel="apple-touch-icon" href="assets/img/icon-192.png">
+    <link rel="icon" type="image/png" href="assets/img/icones/icone.png">
+    <link rel="apple-touch-icon" href="assets/img/icones/icon-192.png">
     <link rel="manifest" href="manifest.webmanifest">
 
     <link rel="stylesheet" href="styles/menu.css">
@@ -48,10 +48,36 @@
                 </div>
             </div>
         </div>
+
+    </div>
+
+    <div id="server-screen" style="display: none;">
+        <div id="orientation-lock-server" aria-live="polite">
+            <p>Gire o celular para usar no modo paisagem.</p>
+        </div>
+
+        <div class="server-ui">
+            <div class="server-select-box">
+                <p>Escolha um servidor</p>
+                <div class="server-grid">
+                    <button class="server-slot is-top" data-server="1" type="button">
+                        <span class="server-label">Novo Serve</span>
+                    </button>
+                    <button class="server-slot is-left" data-server="2" type="button">
+                        <span class="server-label">Novo Serve</span>
+                    </button>
+                    <button class="server-slot is-right" data-server="3" type="button">
+                        <span class="server-label">Novo Serve</span>
+                    </button>
+                </div>
+                <button class="server-back menu-arrowed" type="button">Voltar</button>
+            </div>
+        </div>
     </div>
 
     <div id="game-screen" style="display: none;">
         <a id="back-menu" href="#">Sair</a>
+        <button id="inventory-button" type="button">Inventario</button>
 
         <div id="confirm-menu" class="menu-confirm">
             <div class="menu-confirm-box">
@@ -68,6 +94,10 @@
         </div>
 
         <canvas id="gameCanvas"></canvas>
+
+        <div id="inventory-screen" aria-hidden="true">
+            <button id="inventory-back" type="button">Voltar</button>
+        </div>
 
         <div id="touch-controls" aria-hidden="true">
             <div id="analog-base">
